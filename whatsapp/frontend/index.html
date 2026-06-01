@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WhatsApp Connect Demo</title>
+</head>
+<body>
+
+    <h1>CRM Demo</h1>
+
+    <button id="connect-btn">
+        Connect WhatsApp
+    </button>
+
+    <pre id="result"></pre>
+
+    <script
+        async
+        defer
+        crossorigin="anonymous"
+        src="https://connect.facebook.net/en_US/sdk.js">
+    </script>
+
+    <script>
+
+        let appId = null;
+        let configId = null;
+        let sdkLoaded = false;
+
+        async function loadConfig() {
+
+            const response = await fetch(
+                "/whatsapp/connect"
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    "Failed to load WhatsApp config"
+                );
+            }
+
+            const data = await response.json();
+
+            appId = data.app_id;
+            configId = data.config_id;
+
+            console.log(
+                "Config Loaded:",
+                data
+            );
+
+            return data;
+        }
+
+        window.fbAsyncInit = function () {
+
+            sdkLoaded = true;
+
+            console.log(
+                "Facebook SDK Loaded"
+            );
+        };
+
+        async function initializeFacebook() {
+
+            await loadConfig();
+
+            FB.init({
+                appId: appId,
+                cookie: true,
+                xfbml: true,
+                version: "v23.0"
+            });
+
+            console.log(
+                "Facebook Initialized"
+            );
+
+            console.log(
+                "App ID:",
+                appId
+            );
+
+            console.log(
+                "Config ID:",
+                configId
+            );
+        }
+
+        async function handleMetaResponse(response) {
+
+            console.log(
+                "META RESPONSE:",
+                response
+            );
+
+            const code =
+                response?.authResponse?.code;
+
+            if (!code) {
+
+                document.getElementById(
+                    "result"
+                ).innerText =
+                    "No authorization code returned";
+
+                return;
+            }
+
+            try {
+
+                const callbackResponse =
+                    await fetch(
+                        "/whatsapp/callback",
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body: JSON.stringify({
+                                tenant_id:
+                                    "demo-company",
+
+                                code: code
+                            })
+                        }
+                    );
+
+                const callbackData =
+                    await callbackResponse.json();
+
+                console.log(
+                    "Callback Response:",
+                    callbackData
+                );
+
+                document.getElementById(
+                    "result"
+                ).innerText =
+                    JSON.stringify(
+                        callbackData,
+                        null,
+                        2
+                    );
+
+            } catch (error) {
+
+                console.error(error);
+
+                document.getElementById(
+                    "result"
+                ).innerText =
+                    error.toString();
+            }
+        }
+
+        async function connectWhatsApp() {
+
+            try {
+
+                if (!sdkLoaded) {
+
+                    alert(
+                        "Facebook SDK not loaded yet."
+                    );
+
+                    return;
+                }
+
+                await initializeFacebook();
+
+                console.log(
+                    "Launching Embedded Signup..."
+                );
+
+                FB.login(
+                    function(response) {
+
+                        handleMetaResponse(
+                            response
+                        );
+
+                    },
+                    {
+                        config_id: configId,
+                        response_type: "code",
+                        override_default_response_type: true
+                    }
+                );
+
+            } catch (error) {
+
+                console.error(error);
+
+                document.getElementById(
+                    "result"
+                ).innerText =
+                    error.toString();
+            }
+        }
+
+        document
+            .getElementById(
+                "connect-btn"
+            )
+            .addEventListener(
+                "click",
+                connectWhatsApp
+            );
+
+    </script>
+
+</body>
+</html>

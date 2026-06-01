@@ -1,0 +1,11 @@
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+META_APP_ID = os.getenv("META_APP_ID")
+WHATSAPP_EMBEDDED_SIGNUP_CONFIG_ID = os.getenv("WHATSAPP_EMBEDDED_SIGNUP_CONFIG_ID")
+META_APP_SECRET = os.getenv("META_APP_SECRET")
+WHATSAPP_REDIRECT_URI = os.getenv("WHATSAPP_REDIRECT_URI")
+META_REDIRECT_URI = os.getenv("META_REDIRECT_URI")
+META_VERIFY_TOKEN = os.getenv("META_VERIFY_TOKEN")
